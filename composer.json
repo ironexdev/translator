@@ -1,0 +1,21 @@
+{
+  "name": "ironex/translator",
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "Ironex\\": "src/"
+    }
+  },
+  "authors": [
+    {
+      "name": "Ironex"
+    }
+  ],
+  "description": "Work in Progress",
+  "require": {
+    "php": ">=7.1.0",
+    "php-di/php-di": "^6.0",
+    "doctrine/annotations": "^1.6",
+    "gettext/gettext": "^4.6"
+  }
+}
