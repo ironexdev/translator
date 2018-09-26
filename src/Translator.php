@@ -7,6 +7,7 @@ use Gettext\Translation as GtxtTranslation;
 use Gettext\Translations as GtxtTranslations;
 use Ironex\Example\Language;
 use Ironex\Exception\TranslationNotFoundIronException;
+use Ironex\Exception\TranslationsFileNotFoundIronException;
 
 class Translator implements TranslatorInterface
 {
@@ -86,15 +87,119 @@ class Translator implements TranslatorInterface
      */
     public function getPluralFormCount(): int
     {
-        return $this->pluralForm[0];
+        return $this->pluralForm[0] - 1;
+    }
+
+    /**
+     * @param string $msgid
+     * @param string $msgctx
+     * @return GtxtTranslation|null
+     * @throws TranslationsFileNotFoundIronException
+     */
+    public function getTranslation(string $msgid, string $msgctx = ""): ?GtxtTranslation
+    {
+        if(!$this->translationsWithIndexes)
+        {
+            $this->translationsWithIndexes = $this->loadTranslationsWithIndexesFromFile($this->currentLanguage);
+        }
+
+        return $this->translationsWithIndexes->find($msgctx, $msgid) ?: null;
+    }
+
+    /**
+     * @throws TranslationsFileNotFoundIronException
+     */
+    public function getTranslations(): GtxtTranslations
+    {
+        if(!$this->translationsWithIndexes)
+        {
+            $this->translationsWithIndexes = $this->loadTranslationsWithIndexesFromFile($this->currentLanguage);
+        }
+
+        return $this->translationsWithIndexes;
+    }
+
+    /**
+     * @return array
+     * @throws TranslationsFileNotFoundIronException
+     */
+    public function getCompleteTranslations(): array
+    {
+        $translations = $this->getTranslations();
+        $pluralFormCount = $this->getPluralFormCount();
+
+        foreach($translations as $id => $translation)
+        {
+            /** @var GtxtTranslation $translation */
+            if(!$translation->getTranslation() || count($translation->getPluralTranslations()) !== $pluralFormCount)
+            {
+                unset($translations[$id]);
+            }
+        }
+
+        return array_values($translations->getArrayCopy());
+    }
+
+    /**
+     * @return array
+     * @throws TranslationsFileNotFoundIronException
+     */
+    public function getIncompleteTranslations(): array
+    {
+        $translations = $this->getTranslations();
+        $pluralFormCount = $this->getPluralFormCount();
+
+        foreach($translations as $id => $translation)
+        {
+            /** @var GtxtTranslation $translation */
+            if($translation->getTranslation() && count($translation->getPluralTranslations()) === $pluralFormCount)
+            {
+                unset($translations[$id]);
+            }
+        }
+
+        return array_values($translations->getArrayCopy());
+    }
+
+    /**
+     * @param $value
+     * @return array
+     * @throws TranslationsFileNotFoundIronException
+     */
+    public function searchTranslations($value): array
+    {
+        $translations = $this->getTranslations();
+
+        $input = preg_quote($value, "~");
+
+        $result = array_filter($translations->getArrayCopy(), function($translation) use($input)  {
+
+            /** @var GtxtTranslation $translation */
+            return preg_grep("~" . $input . "~", [
+                "original" => $translation->getOriginal() ?? "",
+                "translation" => $translation->getTranslation() ?? "",
+                "plural" => $translation->getPlural() ?? ""
+            ]);
+        });
+
+        return array_values($result);
     }
 
     /**
      * @return void
+     * @throws TranslationsFileNotFoundIronException
      */
     public function synchronizeTranslationFiles(): void
     {
-        $defaultTranslations = $this->loadTranslationsWithIndexesFromFile($this->defaultLanguage);
+        try
+        {
+            $defaultTranslations = $this->getTranslations();
+        }
+        catch (TranslationsFileNotFoundIronException $e)
+        {
+            $this->createTranslationsFile(new GtxtTranslations(), $this->defaultLanguage);
+            $defaultTranslations = $this->getTranslations();
+        }
 
         foreach($this->languages as $language)
         {
@@ -103,7 +208,15 @@ class Translator implements TranslatorInterface
                 continue;
             }
 
-            $translations = $this->loadTranslationsWithIndexesFromFile($language);
+            try
+            {
+                $translations = $this->loadTranslationsWithIndexesFromFile($language);
+            }
+            catch (TranslationsFileNotFoundIronException $e)
+            {
+                $this->createTranslationsFile(new GtxtTranslations(), $language);
+                $translations = $this->loadTranslationsWithIndexesFromFile($language);
+            }
 
             /** @var GtxtTranslation $defaultTranslation */
             foreach($defaultTranslations as $defaultTranslation)
@@ -146,7 +259,7 @@ class Translator implements TranslatorInterface
 
             if($pluralTranslation)
             {
-                return sprintf($pluralTranslation, $countable);
+               return strtr($pluralTranslation, ["{{countable}}" => $countable]);
             }
             else
             {
@@ -161,12 +274,13 @@ class Translator implements TranslatorInterface
      * @param string $msgTranslation
      * @param array $msgPluralTranslations
      * @throws TranslationNotFoundIronException
+     * @throws TranslationsFileNotFoundIronException
      */
     public function updateTranslation(string $msgctx, string $msgid, string $msgTranslation, array $msgPluralTranslations): void
     {
         if(!$this->translationsWithIndexes)
         {
-            $this->translationsWithIndexes = $this->loadTranslationsWithIndexesFromFile($this->currentLanguage);
+            $this->translationsWithIndexes = $this->getTranslations();
         }
 
         $translation = $this->translationsWithIndexes->find($msgctx, $msgid);
@@ -185,9 +299,7 @@ class Translator implements TranslatorInterface
                     ->setPlural($msgPluralTranslations[0])
                     ->setPluralTranslations($msgPluralTranslations);
 
-        $this->translations[] = $translation;
-
-        $this->saveTranslationsToFile($this->translations, $this->currentLanguage);
+        $this->saveTranslationsToFile($this->translationsWithIndexes, $this->currentLanguage);
     }
 
     /**
@@ -224,22 +336,18 @@ class Translator implements TranslatorInterface
     /**
      * @param LanguageInterface $language
      * @return GtxtTranslations
+     * @throws TranslationsFileNotFoundIronException
      */
     private function loadTranslationsWithIndexesFromFile(LanguageInterface $language): GtxtTranslations
     {
         $translationFile = $this->getTranslationFile($language, static::PO_EXTENSION);
 
-        if($this->translationFileExists($translationFile))
+        if(!$this->translationFileExists($translationFile))
         {
-            $translations = GtxtTranslations::fromPoFile($translationFile);
-        }
-        else
-        {
-            $translations = new GtxtTranslations();
-            $this->createTranslationsFile($translations, $language);
+            throw new TranslationsFileNotFoundIronException();
         }
 
-        return $translations;
+        return GtxtTranslations::fromPoFile($translationFile);
     }
 
     /**

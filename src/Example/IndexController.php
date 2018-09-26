@@ -3,6 +3,7 @@
 namespace Ironex\Example;
 
 use Ironex\Exception\TranslationNotFoundIronException;
+use Ironex\Exception\TranslationsFileNotFoundIronException;
 use Ironex\Translator;
 
 class IndexController
@@ -10,6 +11,7 @@ class IndexController
     /**
      * @return void
      * @throws TranslationNotFoundIronException
+     * @throws TranslationsFileNotFoundIronException
      */
     public function renderDefault(): void
     {
@@ -25,11 +27,14 @@ class IndexController
         $translator = new Translator($english, $english, $languages, $translationsDirectory, true);
 
         $translator->synchronizeTranslationFiles();
-        $penguin = $translator->translate("Penguin");
-        $penguins = $translator->translate("Penguin", 2);
-        // $translator->updateTranslation("", "Penguin", "Penguin", ["%s penguins", "%s penguins"]);
-        // $translator->updateTranslation("", "Penguin", "Tučňák", ["%s tučňáci", "%s tučňáků", "%s tučňáků"]);
+        $singular = $translator->translate("Hi, {{name}}");
+        $plural = $translator->translate("Hi, {{name}}", 2);
+        // $translator->updateTranslation("", "Hi, {{name}}", "Hi, {{name}}", ["Hi, {{countable}} guys"]);
+        // $translator->updateTranslation("", "Hi, {{name}}", "Ahoj, {{name}}", ["Ahoj, {{countable}} lidi", "Ahoj, {{countable}}"]);
+        // var_dump($translator->searchTranslations("i"));
+        // var_dump($translator->getIncompleteTranslations());
+        // var_dump($translator->getCompleteTranslations());
 
-        echo $penguin . "<br><br>" . $penguins;
+        echo strtr($singular, ["{{name}}" => "Jack"]) . "<br><br>" . $plural;
     }
 }
