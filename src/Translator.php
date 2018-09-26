@@ -110,6 +110,11 @@ class Translator implements TranslatorInterface
             }
         }
 
+        if(!$translations)
+        {
+            return [];
+        }
+
         return array_values($translations->getArrayCopy());
     }
 
@@ -129,6 +134,11 @@ class Translator implements TranslatorInterface
             {
                 unset($translations[$id]);
             }
+        }
+
+        if(!$translations)
+        {
+            return [];
         }
 
         return array_values($translations->getArrayCopy());
@@ -182,6 +192,11 @@ class Translator implements TranslatorInterface
         else
         {
             $translations = $this->getTranslations();
+        }
+
+        if(!$translations)
+        {
+            return [];
         }
 
         $input = preg_quote($value, "~");
