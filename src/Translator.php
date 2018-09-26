@@ -98,7 +98,7 @@ class Translator implements TranslatorInterface
      */
     public function getCompleteTranslations(): array
     {
-        $translations = $this->getTranslations();
+        $translations = $this->getTranslations()->getArrayCopy();
         $pluralFormCount = $this->getPluralFormCount();
 
         foreach($translations as $id => $translation)
@@ -110,12 +110,7 @@ class Translator implements TranslatorInterface
             }
         }
 
-        if(!$translations)
-        {
-            return [];
-        }
-
-        return array_values($translations->getArrayCopy());
+        return array_values($translations);
     }
 
     /**
@@ -124,7 +119,7 @@ class Translator implements TranslatorInterface
      */
     public function getIncompleteTranslations(): array
     {
-        $translations = $this->getTranslations();
+        $translations = $this->getTranslations()->getArrayCopy();
         $pluralFormCount = $this->getPluralFormCount();
 
         foreach($translations as $id => $translation)
@@ -136,12 +131,7 @@ class Translator implements TranslatorInterface
             }
         }
 
-        if(!$translations)
-        {
-            return [];
-        }
-
-        return array_values($translations->getArrayCopy());
+        return array_values($translations);
     }
 
     /**
@@ -154,7 +144,7 @@ class Translator implements TranslatorInterface
     {
         if(!$this->translationsWithIndexes)
         {
-            $this->translationsWithIndexes = $this->loadTranslationsWithIndexesFromFile($this->currentLanguage);
+            $this->translationsWithIndexes = $this->getTranslations();
         }
 
         return $this->translationsWithIndexes->find($msgctx, $msgid) ?: null;
@@ -191,27 +181,22 @@ class Translator implements TranslatorInterface
         }
         else
         {
-            $translations = $this->getTranslations();
-        }
-
-        if(!$translations)
-        {
-            return [];
+            $translations = array_values($this->getTranslations()->getArrayCopy());
         }
 
         $input = preg_quote($value, "~");
 
-        $result = array_filter($translations->getArrayCopy(), function($translation) use($input)  {
+        $result = array_filter($translations, function($translation) use($input)  {
 
             /** @var Translation $translation */
-            return preg_grep("~" . $input . "~", [
+            return preg_grep("~" . $input . "~i", [
                 "original" => $translation->getOriginal() ?? "",
                 "translation" => $translation->getTranslation() ?? "",
                 "plural" => $translation->getPlural() ?? ""
             ]);
         });
 
-        return array_values($result);
+        return $result;
     }
 
     /**
