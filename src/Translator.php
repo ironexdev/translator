@@ -13,6 +13,8 @@ class Translator implements TranslatorInterface
 {
     const MO_EXTENSION = "mo";
     const PO_EXTENSION = "po";
+    const TRANSLATION_STATUS_COMPLETE = "complete";
+    const TRANSLATION_STATUS_INCOMPLETE = "incomplete";
 
     /**
      * @var Language
@@ -163,12 +165,24 @@ class Translator implements TranslatorInterface
 
     /**
      * @param $value
+     * @param string|null $translationStatus
      * @return array
      * @throws TranslationsFileNotFoundIronException
      */
-    public function searchTranslations($value): array
+    public function searchTranslations($value, string $translationStatus = null): array
     {
-        $translations = $this->getTranslations();
+        if($translationStatus === static::TRANSLATION_STATUS_COMPLETE)
+        {
+            $translations = $this->getCompleteTranslations();
+        }
+        else if($translationStatus === static::TRANSLATION_STATUS_INCOMPLETE)
+        {
+            $translations = $this->getIncompleteTranslations();
+        }
+        else
+        {
+            $translations = $this->getTranslations();
+        }
 
         $input = preg_quote($value, "~");
 

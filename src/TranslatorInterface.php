@@ -41,10 +41,10 @@ interface TranslatorInterface
 
     /**
      * @param $value
+     * @param string|null $translationStatus
      * @return array
-     * @throws TranslationsFileNotFoundIronException
      */
-    public function searchTranslations($value): array;
+    public function searchTranslations($value, string $translationStatus = null): array;
 
     /**
      * @return void
