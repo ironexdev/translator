@@ -91,35 +91,6 @@ class Translator implements TranslatorInterface
     }
 
     /**
-     * @param string $msgid
-     * @param string $msgctx
-     * @return GtxtTranslation|null
-     * @throws TranslationsFileNotFoundIronException
-     */
-    public function getTranslation(string $msgid, string $msgctx = ""): ?GtxtTranslation
-    {
-        if(!$this->translationsWithIndexes)
-        {
-            $this->translationsWithIndexes = $this->loadTranslationsWithIndexesFromFile($this->currentLanguage);
-        }
-
-        return $this->translationsWithIndexes->find($msgctx, $msgid) ?: null;
-    }
-
-    /**
-     * @throws TranslationsFileNotFoundIronException
-     */
-    public function getTranslations(): GtxtTranslations
-    {
-        if(!$this->translationsWithIndexes)
-        {
-            $this->translationsWithIndexes = $this->loadTranslationsWithIndexesFromFile($this->currentLanguage);
-        }
-
-        return $this->translationsWithIndexes;
-    }
-
-    /**
      * @return array
      * @throws TranslationsFileNotFoundIronException
      */
@@ -159,6 +130,35 @@ class Translator implements TranslatorInterface
         }
 
         return array_values($translations->getArrayCopy());
+    }
+
+    /**
+     * @param string $msgid
+     * @param string $msgctx
+     * @return GtxtTranslation|null
+     * @throws TranslationsFileNotFoundIronException
+     */
+    public function getTranslation(string $msgid, string $msgctx = ""): ?GtxtTranslation
+    {
+        if(!$this->translationsWithIndexes)
+        {
+            $this->translationsWithIndexes = $this->loadTranslationsWithIndexesFromFile($this->currentLanguage);
+        }
+
+        return $this->translationsWithIndexes->find($msgctx, $msgid) ?: null;
+    }
+
+    /**
+     * @throws TranslationsFileNotFoundIronException
+     */
+    public function getTranslations(): GtxtTranslations
+    {
+        if(!$this->translationsWithIndexes)
+        {
+            $this->translationsWithIndexes = $this->loadTranslationsWithIndexesFromFile($this->currentLanguage);
+        }
+
+        return $this->translationsWithIndexes;
     }
 
     /**
@@ -336,23 +336,6 @@ class Translator implements TranslatorInterface
     /**
      * @param LanguageInterface $language
      * @return GtxtTranslations
-     * @throws TranslationsFileNotFoundIronException
-     */
-    private function loadTranslationsWithIndexesFromFile(LanguageInterface $language): GtxtTranslations
-    {
-        $translationFile = $this->getTranslationFile($language, static::PO_EXTENSION);
-
-        if(!$this->translationFileExists($translationFile))
-        {
-            throw new TranslationsFileNotFoundIronException();
-        }
-
-        return GtxtTranslations::fromPoFile($translationFile);
-    }
-
-    /**
-     * @param LanguageInterface $language
-     * @return GtxtTranslations
      */
     private function loadTranslationsFromFile(LanguageInterface $language): GtxtTranslations
     {
@@ -369,6 +352,23 @@ class Translator implements TranslatorInterface
         }
 
         return $translations;
+    }
+
+    /**
+     * @param LanguageInterface $language
+     * @return GtxtTranslations
+     * @throws TranslationsFileNotFoundIronException
+     */
+    private function loadTranslationsWithIndexesFromFile(LanguageInterface $language): GtxtTranslations
+    {
+        $translationFile = $this->getTranslationFile($language, static::PO_EXTENSION);
+
+        if(!$this->translationFileExists($translationFile))
+        {
+            throw new TranslationsFileNotFoundIronException();
+        }
+
+        return GtxtTranslations::fromPoFile($translationFile);
     }
 
     /**
