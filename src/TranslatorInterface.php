@@ -2,8 +2,8 @@
 
 namespace Ironex;
 
-use Gettext\Translation as GtxtTranslation;
-use Gettext\Translations as GtxtTranslations;
+use Gettext\Translation as Translation;
+use Gettext\Translations as Translations;
 use Ironex\Exception\TranslationNotFoundIronException;
 use Ironex\Exception\TranslationsFileNotFoundIronException;
 
@@ -29,15 +29,15 @@ interface TranslatorInterface
     /**
      * @param string $msgid
      * @param string $msgctx
-     * @return GtxtTranslation|null
+     * @return Translation|null
      * @throws TranslationsFileNotFoundIronException
      */
-    public function getTranslation(string $msgid, string $msgctx = ""): ?GtxtTranslation;
+    public function getTranslation(string $msgid, string $msgctx = ""): ?Translation;
 
     /**
      * @throws TranslationsFileNotFoundIronException
      */
-    public function getTranslations(): GtxtTranslations;
+    public function getTranslations(): Translations;
 
     /**
      * @param $value

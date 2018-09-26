@@ -3,8 +3,8 @@
 namespace Ironex;
 
 use Gettext\Translator as GtxtTranslator;
-use Gettext\Translation as GtxtTranslation;
-use Gettext\Translations as GtxtTranslations;
+use Gettext\Translation;
+use Gettext\Translations;
 use Ironex\Example\Language;
 use Ironex\Exception\TranslationNotFoundIronException;
 use Ironex\Exception\TranslationsFileNotFoundIronException;
@@ -40,12 +40,12 @@ class Translator implements TranslatorInterface
     private $pluralForm;
 
     /**
-     * @var GtxtTranslations
+     * @var Translations
      */
     private $translations;
 
     /**
-     * @var GtxtTranslations
+     * @var Translations
      */
     private $translationsWithIndexes;
 
@@ -101,7 +101,7 @@ class Translator implements TranslatorInterface
 
         foreach($translations as $id => $translation)
         {
-            /** @var GtxtTranslation $translation */
+            /** @var Translation $translation */
             if(!$translation->getTranslation() || count($translation->getPluralTranslations()) !== $pluralFormCount)
             {
                 unset($translations[$id]);
@@ -122,7 +122,7 @@ class Translator implements TranslatorInterface
 
         foreach($translations as $id => $translation)
         {
-            /** @var GtxtTranslation $translation */
+            /** @var Translation $translation */
             if($translation->getTranslation() && count($translation->getPluralTranslations()) === $pluralFormCount)
             {
                 unset($translations[$id]);
@@ -135,10 +135,10 @@ class Translator implements TranslatorInterface
     /**
      * @param string $msgid
      * @param string $msgctx
-     * @return GtxtTranslation|null
+     * @return Translation|null
      * @throws TranslationsFileNotFoundIronException
      */
-    public function getTranslation(string $msgid, string $msgctx = ""): ?GtxtTranslation
+    public function getTranslation(string $msgid, string $msgctx = ""): ?Translation
     {
         if(!$this->translationsWithIndexes)
         {
@@ -151,7 +151,7 @@ class Translator implements TranslatorInterface
     /**
      * @throws TranslationsFileNotFoundIronException
      */
-    public function getTranslations(): GtxtTranslations
+    public function getTranslations(): Translations
     {
         if(!$this->translationsWithIndexes)
         {
@@ -174,7 +174,7 @@ class Translator implements TranslatorInterface
 
         $result = array_filter($translations->getArrayCopy(), function($translation) use($input)  {
 
-            /** @var GtxtTranslation $translation */
+            /** @var Translation $translation */
             return preg_grep("~" . $input . "~", [
                 "original" => $translation->getOriginal() ?? "",
                 "translation" => $translation->getTranslation() ?? "",
@@ -197,7 +197,7 @@ class Translator implements TranslatorInterface
         }
         catch (TranslationsFileNotFoundIronException $e)
         {
-            $this->createTranslationsFile(new GtxtTranslations(), $this->defaultLanguage);
+            $this->createTranslationsFile(new Translations(), $this->defaultLanguage);
             $defaultTranslations = $this->getTranslations();
         }
 
@@ -214,11 +214,11 @@ class Translator implements TranslatorInterface
             }
             catch (TranslationsFileNotFoundIronException $e)
             {
-                $this->createTranslationsFile(new GtxtTranslations(), $language);
+                $this->createTranslationsFile(new Translations(), $language);
                 $translations = $this->loadTranslationsWithIndexesFromFile($language);
             }
 
-            /** @var GtxtTranslation $defaultTranslation */
+            /** @var Translation $defaultTranslation */
             foreach($defaultTranslations as $defaultTranslation)
             {
                 if(!$translations->find($defaultTranslation->getContext(), $defaultTranslation->getOriginal()))
@@ -305,18 +305,18 @@ class Translator implements TranslatorInterface
     /**
      * @param string $msgid
      * @param string $msgctx
-     * @return GtxtTranslation
+     * @return Translation
      */
-    private function createTranslation(string $msgid, string $msgctx = ""): GtxtTranslation
+    private function createTranslation(string $msgid, string $msgctx = ""): Translation
     {
-        return new GtxtTranslation($msgctx, $msgid);
+        return new Translation($msgctx, $msgid);
     }
 
     /**
-     * @param GtxtTranslations $translations
+     * @param Translations $translations
      * @param LanguageInterface $language
      */
-    private function createTranslationsFile(GtxtTranslations $translations, LanguageInterface $language): void
+    private function createTranslationsFile(Translations $translations, LanguageInterface $language): void
     {
         $translations->setLanguage($language->getLocale());
 
@@ -335,19 +335,19 @@ class Translator implements TranslatorInterface
 
     /**
      * @param LanguageInterface $language
-     * @return GtxtTranslations
+     * @return Translations
      */
-    private function loadTranslationsFromFile(LanguageInterface $language): GtxtTranslations
+    private function loadTranslationsFromFile(LanguageInterface $language): Translations
     {
         $translationFile = $this->getTranslationFile($language, static::MO_EXTENSION);
 
         if($this->translationFileExists($translationFile))
         {
-            $translations = GtxtTranslations::fromMoFile($translationFile);
+            $translations = Translations::fromMoFile($translationFile);
         }
         else
         {
-            $translations = new GtxtTranslations();
+            $translations = new Translations();
             $this->createTranslationsFile($translations, $language);
         }
 
@@ -356,10 +356,10 @@ class Translator implements TranslatorInterface
 
     /**
      * @param LanguageInterface $language
-     * @return GtxtTranslations
+     * @return Translations
      * @throws TranslationsFileNotFoundIronException
      */
-    private function loadTranslationsWithIndexesFromFile(LanguageInterface $language): GtxtTranslations
+    private function loadTranslationsWithIndexesFromFile(LanguageInterface $language): Translations
     {
         $translationFile = $this->getTranslationFile($language, static::PO_EXTENSION);
 
@@ -368,14 +368,14 @@ class Translator implements TranslatorInterface
             throw new TranslationsFileNotFoundIronException();
         }
 
-        return GtxtTranslations::fromPoFile($translationFile);
+        return Translations::fromPoFile($translationFile);
     }
 
     /**
-     * @param GtxtTranslations $translations
+     * @param Translations $translations
      * @param LanguageInterface $language
      */
-    private function saveTranslationsToFile(GtxtTranslations $translations, LanguageInterface $language): void
+    private function saveTranslationsToFile(Translations $translations, LanguageInterface $language): void
     {
         $translations->toPoFile($this->getTranslationFile($language, static::PO_EXTENSION));
         $translations->toMoFile($this->getTranslationFile($language, static::MO_EXTENSION));
