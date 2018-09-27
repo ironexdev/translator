@@ -29,10 +29,10 @@ interface TranslatorInterface
     /**
      * @param string $msgid
      * @param string $msgctx
+     * @param LanguageInterface|null $language
      * @return Translation|null
-     * @throws TranslationsFileNotFoundIronException
      */
-    public function getTranslation(string $msgid, string $msgctx = ""): ?Translation;
+    public function getTranslation(string $msgid, string $msgctx = "", LanguageInterface $language = null): ?Translation;
 
     /**
      * @throws TranslationsFileNotFoundIronException

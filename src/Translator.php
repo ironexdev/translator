@@ -137,17 +137,21 @@ class Translator implements TranslatorInterface
     /**
      * @param string $msgid
      * @param string $msgctx
+     * @param LanguageInterface|null $language
      * @return Translation|null
      * @throws TranslationsFileNotFoundIronException
      */
-    public function getTranslation(string $msgid, string $msgctx = ""): ?Translation
+    public function getTranslation(string $msgid, string $msgctx = "", LanguageInterface $language = null): ?Translation
     {
-        if(!$this->translationsWithIndexes)
+        if(!$language && !$this->translationsWithIndexes)
         {
             $this->translationsWithIndexes = $this->getTranslations();
+            return $this->translationsWithIndexes->find($msgctx, $msgid) ?: null;
         }
-
-        return $this->translationsWithIndexes->find($msgctx, $msgid) ?: null;
+        else
+        {
+            return $this->loadTranslationsWithIndexesFromFile($language)->find($msgctx, $msgid) ?: null;
+        }
     }
 
     /**
@@ -251,6 +255,7 @@ class Translator implements TranslatorInterface
      * @param string $msgctx
      * @param LanguageInterface $language
      * @return string
+     * @throws TranslationsFileNotFoundIronException
      */
     public function translate(string $msgid, int $countable = 1, string $msgctx = "", LanguageInterface $language = null): string
     {
@@ -259,8 +264,11 @@ class Translator implements TranslatorInterface
 
         if ($this->isTranslationEnvironment && $currentLanguage->getLocale() === $this->defaultLanguage->getLocale() && !$translation)
         {
-            $this->translations[] = $this->createTranslation($msgid, $msgctx);
-            $this->saveTranslationsToFile($this->translations, $currentLanguage);
+            $this->getTranslations();
+
+            $this->translationsWithIndexes[] = $this->createTranslation($msgid, $msgctx);
+
+            $this->saveTranslationsToFile($this->translationsWithIndexes, $this->currentLanguage);
         }
 
         if (!$translation || $countable === 1)
@@ -292,10 +300,7 @@ class Translator implements TranslatorInterface
      */
     public function updateTranslation(string $msgctx, string $msgid, string $msgTranslation, array $msgPluralTranslations): void
     {
-        if(!$this->translationsWithIndexes)
-        {
-            $this->translationsWithIndexes = $this->getTranslations();
-        }
+        $this->getTranslations();
 
         $translation = $this->translationsWithIndexes->find($msgctx, $msgid);
 
