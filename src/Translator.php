@@ -141,17 +141,16 @@ class Translator implements TranslatorInterface
      * @return Translation|null
      * @throws TranslationsFileNotFoundIronException
      */
-    public function getTranslation(string $msgid, string $msgctx = "", LanguageInterface $language = null): ?Translation
+    public function getTranslation(string $msgid, string $msgctx = "", ?LanguageInterface $language = null): ?Translation
     {
-        if(!$language && !$this->translationsWithIndexes)
-        {
-            $this->translationsWithIndexes = $this->getTranslations();
-            return $this->translationsWithIndexes->find($msgctx, $msgid) ?: null;
-        }
-        else
+        if($language)
         {
             return $this->loadTranslationsWithIndexesFromFile($language)->find($msgctx, $msgid) ?: null;
         }
+
+        $this->getTranslations();
+
+        return $this->translationsWithIndexes->find($msgctx, $msgid) ?: null;
     }
 
     /**
@@ -255,7 +254,6 @@ class Translator implements TranslatorInterface
      * @param string $msgctx
      * @param LanguageInterface $language
      * @return string
-     * @throws TranslationsFileNotFoundIronException
      */
     public function translate(string $msgid, int $countable = 1, string $msgctx = "", LanguageInterface $language = null): string
     {
@@ -264,7 +262,14 @@ class Translator implements TranslatorInterface
 
         if ($this->isTranslationEnvironment && $currentLanguage->getLocale() === $this->defaultLanguage->getLocale() && !$translation)
         {
-            $this->getTranslations();
+            try
+            {
+                $this->getTranslations();
+            }
+            catch (TranslationsFileNotFoundIronException $e)
+            {
+                trigger_error("Error triggered by " . TranslationsFileNotFoundIronException::class, E_USER_ERROR);
+            }
 
             $this->translationsWithIndexes[] = $this->createTranslation($msgid, $msgctx);
 
