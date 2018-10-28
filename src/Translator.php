@@ -192,7 +192,7 @@ class Translator implements TranslatorInterface
         $result = array_filter($translations, function($translation) use($input)  {
 
             /** @var Translation $translation */
-            return preg_grep("~" . $input . "~i", [
+            return preg_grep("~" . $input . "~iu", [
                 "original" => $translation->getOriginal() ?? "",
                 "translation" => $translation->getTranslation() ?? "",
                 "plural" => $translation->getPlural() ?? ""

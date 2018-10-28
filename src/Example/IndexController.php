@@ -2,7 +2,6 @@
 
 namespace Ironex\Example;
 
-use Ironex\Exception\TranslationNotFoundIronException;
 use Ironex\Exception\TranslationsFileNotFoundIronException;
 use Ironex\Translator;
 
@@ -10,7 +9,6 @@ class IndexController
 {
     /**
      * @return void
-     * @throws TranslationNotFoundIronException
      * @throws TranslationsFileNotFoundIronException
      */
     public function renderDefault(): void
