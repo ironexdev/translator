@@ -25,14 +25,14 @@ class IndexController
         $translator = new Translator($english, $english, $languages, $translationsDirectory, true);
 
         $translator->synchronizeTranslationFiles();
-        $singular = $translator->translate("Hi, {{name}}");
-        $plural = $translator->translate("Hi, {{name}}", 2);
+        $singular = $translator->translate("Hi, {{name}}", 1, "", ["{{name}}" => "Jack"]);
+        $plural = $translator->translate("Hi, {{name}}", 2, "", ["{{name}}" => "Jack"]);
         // $translator->updateTranslation("", "Hi, {{name}}", "Hi, {{name}}", ["Hi, {{countable}} guys"]);
         // $translator->updateTranslation("", "Hi, {{name}}", "Ahoj, {{name}}", ["Ahoj, {{countable}} lidi", "Ahoj, {{countable}}"]);
         // var_dump($translator->searchTranslations("i"));
         // var_dump($translator->getIncompleteTranslations());
         // var_dump($translator->getCompleteTranslations());
 
-        echo strtr($singular, ["{{name}}" => "Jack"]) . "<br><br>" . $plural;
+        echo $singular . "<br><br>" . $plural;
     }
 }

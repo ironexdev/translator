@@ -172,7 +172,7 @@ class Translator implements TranslatorInterface
      * @return array
      * @throws TranslationsFileNotFoundIronException
      */
-    public function searchTranslations($value, string $translationStatus = null): array
+    public function searchTranslations($value, ?string $translationStatus = null): array
     {
         if($translationStatus === static::TRANSLATION_STATUS_COMPLETE)
         {
@@ -252,10 +252,11 @@ class Translator implements TranslatorInterface
      * @param string $msgid
      * @param int $countable
      * @param string $msgctx
-     * @param LanguageInterface $language
+     * @param array $parameters
+     * @param LanguageInterface|null $language
      * @return string
      */
-    public function translate(string $msgid, int $countable = 1, string $msgctx = "", LanguageInterface $language = null): string
+    public function translate(string $msgid, int $countable = 1, string $msgctx = "", array $parameters = [], ?LanguageInterface $language = null): string
     {
         $currentLanguage = $language ?: $this->currentLanguage;
         $translation = $this->translations->find($msgctx, $msgid);
@@ -278,7 +279,7 @@ class Translator implements TranslatorInterface
 
         if (!$translation || $countable === 1)
         {
-            return $this->translator->pgettext($msgctx, $msgid);
+            $translatedString = $this->translator->pgettext($msgctx, $msgid);
         }
         else
         {
@@ -286,13 +287,25 @@ class Translator implements TranslatorInterface
 
             if($pluralTranslation)
             {
-               return strtr($pluralTranslation, ["{{countable}}" => $countable]);
+               $translatedString = strtr($pluralTranslation, ["{{countable}}" => $countable]);
             }
             else
             {
-                return $this->translator->pgettext($msgctx, $msgid);
+                $translatedString = $this->translator->pgettext($msgctx, $msgid);
             }
         }
+
+        if($parameters)
+        {
+            if(isset($parameters["{{countable}}"]))
+            {
+                trigger_error("Parameter {{countable}} is not allowed", E_USER_ERROR);
+            }
+
+            $translatedString = strtr($translatedString, $parameters);
+        }
+
+        return $translatedString;
     }
 
     /**

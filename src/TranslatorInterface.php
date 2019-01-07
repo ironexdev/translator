@@ -32,7 +32,7 @@ interface TranslatorInterface
      * @param LanguageInterface|null $language
      * @return Translation|null
      */
-    public function getTranslation(string $msgid, string $msgctx = "", LanguageInterface $language = null): ?Translation;
+    public function getTranslation(string $msgid, string $msgctx = "", ?LanguageInterface $language = null): ?Translation;
 
     /**
      * @throws TranslationsFileNotFoundIronException
@@ -44,7 +44,7 @@ interface TranslatorInterface
      * @param string|null $translationStatus
      * @return array
      */
-    public function searchTranslations($value, string $translationStatus = null): array;
+    public function searchTranslations($value, ?string $translationStatus = null): array;
 
     /**
      * @return void
@@ -56,10 +56,11 @@ interface TranslatorInterface
      * @param string $msgid
      * @param int $countable
      * @param string $msgctx
-     * @param LanguageInterface $language
+     * @param array $parameters
+     * @param LanguageInterface|null $language
      * @return string
      */
-    public function translate(string $msgid, int $countable = 1, string $msgctx = "", LanguageInterface $language = null): string;
+    public function translate(string $msgid, int $countable = 1, string $msgctx = "", array $parameters = [], ?LanguageInterface $language = null): string;
 
     /**
      * @param string $msgctx
